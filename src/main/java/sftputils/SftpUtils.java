@@ -1,9 +1,18 @@
 package sftputils;
 
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
 
 public class SftpUtils {
 
+    /**
+     * Create dir recursively, similar to shell command mkdir -p
+     *
+     * @param channelSftp
+     * @param path        absolute or relative path
+     * @throws SftpException
+     */
     public static void mkdirp(ChannelSftp channelSftp, String path) throws SftpException {
         if (isBlank(path)) {
             throw new IllegalArgumentException("path cannot be blank");
@@ -25,7 +34,7 @@ public class SftpUtils {
     private static boolean notExists(ChannelSftp channelSftp, String part) throws SftpException {
         try {
             SftpATTRS attrs = channelSftp.lstat(part);
-            if (attrs != null && !attrs.isDir()){
+            if (attrs != null && !attrs.isDir()) {
                 throw new SftpException(ChannelSftp.SSH_FX_FAILURE, "object exists with the same name");
             }
             return false;
@@ -41,7 +50,7 @@ public class SftpUtils {
     private static void mkdir(ChannelSftp channelSftp, String part) throws SftpException {
         try {
             channelSftp.mkdir(part);
-        }catch (SftpException ex){
+        } catch (SftpException ex) {
             error("mkdir", channelSftp, part);
             throw ex;
         }
@@ -50,7 +59,7 @@ public class SftpUtils {
     private static void cd(ChannelSftp channelSftp, String part) throws SftpException {
         try {
             channelSftp.cd(part);
-        }catch (SftpException ex){
+        } catch (SftpException ex) {
             error("cd", channelSftp, part);
             throw ex;
         }
@@ -61,9 +70,9 @@ public class SftpUtils {
     }
 
     private static void error(String ops, ChannelSftp channelSftp, String path) {
-        try{
+        try {
             System.err.println("Operation: " + ops + ", pwd:" + channelSftp.pwd() + ", path: " + path);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             System.err.println(ex.getMessage());
         }
     }
