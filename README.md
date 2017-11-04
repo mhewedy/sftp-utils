@@ -8,7 +8,7 @@ SftpUtils.mkdirp(sftpChannel, "/path/to/dir"); //absolute
 SftpUtils.mkdirp(sftpChannel, "another/path/to/dir"); // relative
 ```
 
- * doInChannel
+ * doInChannel    
  Manage the open and close of session and channel objects
 
 ```java
