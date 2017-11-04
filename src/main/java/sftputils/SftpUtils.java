@@ -3,7 +3,6 @@ package sftputils;
 import com.jcraft.jsch.*;
 
 import java.util.Properties;
-import java.util.function.Function;
 
 public class SftpUtils {
 
@@ -19,6 +18,8 @@ public class SftpUtils {
             throw new IllegalArgumentException("path cannot be blank");
         }
 
+        String pwd = channelSftp.pwd();
+
         String[] parts = path.split("/");
         if (isBlank(parts[0])) {
             parts[0] = "/";
@@ -30,10 +31,11 @@ public class SftpUtils {
             }
             cd(channelSftp, part);
         }
+        // return to original path before recursively create the new path
+        cd(channelSftp, pwd);
     }
 
-    public static <T> T doInChannel(String host, int port, String username, String password,
-                                    Function<ChannelSftp, T> block) {
+    public static <T> T execute(String host, int port, String username, String password, Block<T> block) {
         try {
             JSch jsch = new JSch();
             Session session = jsch.getSession(username, host, port);
@@ -41,13 +43,13 @@ public class SftpUtils {
             config.setProperty("StrictHostKeyChecking", "no");
             session.setConfig(config);
             session.setPassword(password);
-            return doInChannel(session, block);
+            return execute(session, block);
         } catch (JSchException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    public static <T> T doInChannel(Session session, Function<ChannelSftp, T> block) {
+    public static <T> T execute(Session session, Block<T> block) {
         ChannelSftp sftpChannel = null;
         try {
             if (!session.isConnected()) {
@@ -58,15 +60,21 @@ public class SftpUtils {
             channel.connect();
             sftpChannel = (ChannelSftp) channel;
 
-            return block.apply(sftpChannel);
+            return block.execute(sftpChannel);
 
         } catch (JSchException ex) {
+            throw new RuntimeException(ex);
+        } catch (SftpException ex) {
             throw new RuntimeException(ex);
         } finally {
             if (sftpChannel != null) {
                 sftpChannel.disconnect();
             }
         }
+    }
+
+    public interface Block<T> {
+        public T execute(ChannelSftp channelSftp) throws SftpException;
     }
 
     private static boolean notExists(ChannelSftp channelSftp, String part) throws SftpException {

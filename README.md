@@ -8,40 +8,37 @@ mkdirp(sftpChannel, "/path/to/dir"); //absolute
 mkdirp(sftpChannel, "another/path/to/dir"); // relative
 ```
 
- * doInChannel    
- Manage the open and close of session and channel objects
+ * execute
+ Execute sftp commands giving a managed ChannelSftp
 
 ```java
-Object isDir = doInChannel("host", 22 /*port*/, "username", "password", channelSftp -> {
-      try {
-          return channelSftp.lstat("/").isDir();
-      } catch (SftpException e) {
-          return false;
-      }
-  });
-System.out.println(isDir);       // true
-
-```
-Also
-```java
-// Cache this session Object, as Spring Bean for example
 JSch jsch = new JSch();
-Session session = jsch.getSession("username", "host", 22 /*port*/);
+session = jsch.getSession("mhewedy", "192.168.1.10", 22 /*port*/);
 Properties config = new Properties();
 config.setProperty("StrictHostKeyChecking", "no");
 session.setConfig(config);
-session.setPassword("password");
+session.setPassword("system");
 session.connect();
 
-// Then use it like this:
-String result = doInChannel(session, channel -> {
-    try {
-        return channel.pwd();
-    } catch (SftpException e) {
-        throw new RuntimeException(e);
-    }
+Vector result = (Vector) SftpUtils.execute(session, channel -> {
+    System.out.println("pwd: " + channel.pwd());
+    SftpUtils.mkdirp(channel, "path/to/new/file");
+    return channel.ls("path");
 });
-System.out.println(result);
+result.forEach(System.out::println);
+
+boolean findFound = SftpUtils.execute(session, channel -> {
+    System.out.println("pwd: " + channel.pwd());
+    try{
+        channel.lstat("non_found_find");
+    }catch (SftpException ex){  // only handel exception when needed
+        if (ex.id == ChannelSftp.SSH_FX_NO_SUCH_FILE){
+            return false;
+        }
+    }
+    return true;
+});
+System.out.println("find found: " + findFound);
 ```
 
 ### Usage:
@@ -49,6 +46,6 @@ System.out.println(result);
   <dependency>
     <groupId>com.github.mhewedy</groupId>
     <artifactId>sftp-utils</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
   </dependency>
-  ```
+```
