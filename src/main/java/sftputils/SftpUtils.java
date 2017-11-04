@@ -41,7 +41,17 @@ public class SftpUtils {
             config.setProperty("StrictHostKeyChecking", "no");
             session.setConfig(config);
             session.setPassword(password);
-            session.connect();
+            return doInChannel(session, block);
+        } catch (JSchException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public static <T> T doInChannel(Session session, Function<ChannelSftp, T> block) {
+        try {
+            if (!session.isConnected()) {
+                session.connect();
+            }
 
             Channel channel = session.openChannel("sftp");
             channel.connect();
@@ -50,8 +60,6 @@ public class SftpUtils {
             T result = block.apply(sftpChannel);
 
             sftpChannel.disconnect();
-            session.disconnect();
-
             return result;
         } catch (JSchException ex) {
             throw new RuntimeException(ex);
