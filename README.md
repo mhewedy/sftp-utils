@@ -8,7 +8,7 @@ SftpUtils.mkdirp(sftpChannel, "/path/to/dir"); //absolute
 SftpUtils.mkdirp(sftpChannel, "another/path/to/dir"); // relative
 ```
 
- * execute
+ * execute   
  Execute sftp commands giving a managed ChannelSftp
 
 ```java
