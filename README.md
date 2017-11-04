@@ -27,6 +27,6 @@ System.out.println(isDir);       // true
   <dependency>
     <groupId>com.github.mhewedy</groupId>
     <artifactId>sftp-utils</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
   </dependency>
   ```
