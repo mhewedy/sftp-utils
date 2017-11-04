@@ -8,9 +8,8 @@ SftpUtils.mkdirp(sftpChannel, "/path/to/dir"); //absolute
 SftpUtils.mkdirp(sftpChannel, "another/path/to/dir"); // relative
 ```
 
- * doInChannel    
- 
-  Manage the open and close of session and channel objects
+ * doInChannel
+ Manage the open and close of session and channel objects
 
 ```java
 Object isDir = doInChannel("host", 22 /*port*/, "username", "password", channelSftp -> {
