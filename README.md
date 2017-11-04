@@ -4,8 +4,8 @@
 Create directory structure recursively (from mkdir -p command)   
 
 ```java
-SftpUtils.mkdirp(sftpChannel, "/path/to/dir"); //absolute
-SftpUtils.mkdirp(sftpChannel, "another/path/to/dir"); // relative
+mkdirp(sftpChannel, "/path/to/dir"); //absolute
+mkdirp(sftpChannel, "another/path/to/dir"); // relative
 ```
 
  * doInChannel    
