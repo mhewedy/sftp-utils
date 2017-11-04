@@ -2,8 +2,6 @@ package sftputils;
 
 import com.jcraft.jsch.*;
 
-import java.util.Properties;
-
 public class SftpUtils {
 
     /**
@@ -35,21 +33,16 @@ public class SftpUtils {
         cd(channelSftp, pwd);
     }
 
-    public static <T> T execute(String host, int port, String username, String password, Block<T> block) {
-        try {
-            JSch jsch = new JSch();
-            Session session = jsch.getSession(username, host, port);
-            Properties config = new Properties();
-            config.setProperty("StrictHostKeyChecking", "no");
-            session.setConfig(config);
-            session.setPassword(password);
-            return execute(session, block);
-        } catch (JSchException ex) {
-            throw new RuntimeException(ex);
-        }
+    public static <T> void execute(Session session, final Action0 block) {
+        execute(session, new Action1<Void>() {
+            public Void execute(ChannelSftp channelSftp) throws SftpException {
+                block.execute(channelSftp);
+                return null;
+            }
+        });
     }
 
-    public static <T> T execute(Session session, Block<T> block) {
+    public static <T> T execute(Session session, Action1<T> block) {
         ChannelSftp sftpChannel = null;
         try {
             if (!session.isConnected()) {
@@ -73,7 +66,11 @@ public class SftpUtils {
         }
     }
 
-    public interface Block<T> {
+    public interface Action0 {
+        public void execute(ChannelSftp channelSftp) throws SftpException;
+    }
+
+    public interface Action1<T> {
         public T execute(ChannelSftp channelSftp) throws SftpException;
     }
 
