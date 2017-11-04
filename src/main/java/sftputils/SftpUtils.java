@@ -1,8 +1,9 @@
 package sftputils;
 
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.SftpATTRS;
-import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.*;
+
+import java.util.Properties;
+import java.util.function.Function;
 
 public class SftpUtils {
 
@@ -28,6 +29,32 @@ public class SftpUtils {
                 mkdir(channelSftp, part);
             }
             cd(channelSftp, part);
+        }
+    }
+
+    public static <T> T doInChannel(String host, int port, String username, String password,
+                                    Function<ChannelSftp, T> block) {
+        try {
+            JSch jsch = new JSch();
+            Session session = jsch.getSession(username, host, port);
+            Properties config = new Properties();
+            config.setProperty("StrictHostKeyChecking", "no");
+            session.setConfig(config);
+            session.setPassword(password);
+            session.connect();
+
+            Channel channel = session.openChannel("sftp");
+            channel.connect();
+            ChannelSftp sftpChannel = (ChannelSftp) channel;
+
+            T result = block.apply(sftpChannel);
+
+            sftpChannel.disconnect();
+            session.disconnect();
+
+            return result;
+        } catch (JSchException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
