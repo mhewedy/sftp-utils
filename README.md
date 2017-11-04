@@ -21,3 +21,12 @@ Object isDir = doInChannel("host", 22 /*port*/, "username", "password", channelS
   });
 System.out.println(isDir);       // true
 ```
+
+### Usage:
+```xml
+  <dependency>
+    <groupId>com.github.mhewedy</groupId>
+    <artifactId>sftp-utils</artifactId>
+    <version>1.0.0</version>
+  </dependency>
+  ```
