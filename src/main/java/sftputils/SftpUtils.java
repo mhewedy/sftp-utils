@@ -48,6 +48,7 @@ public class SftpUtils {
     }
 
     public static <T> T doInChannel(Session session, Function<ChannelSftp, T> block) {
+        ChannelSftp sftpChannel = null;
         try {
             if (!session.isConnected()) {
                 session.connect();
@@ -55,14 +56,16 @@ public class SftpUtils {
 
             Channel channel = session.openChannel("sftp");
             channel.connect();
-            ChannelSftp sftpChannel = (ChannelSftp) channel;
+            sftpChannel = (ChannelSftp) channel;
 
-            T result = block.apply(sftpChannel);
+            return block.apply(sftpChannel);
 
-            sftpChannel.disconnect();
-            return result;
         } catch (JSchException ex) {
             throw new RuntimeException(ex);
+        } finally {
+            if (sftpChannel != null) {
+                sftpChannel.disconnect();
+            }
         }
     }
 
