@@ -29,6 +29,26 @@ boolean findFound = SftpUtils.execute(session, channel -> {
 System.out.println("find found: " + findFound);
 ```
 
+Copy File and print its content from SFTP after copy:
+
+```java
+InputStream transfer = Files.newInputStream(Paths.get("/Users/mhewedy/Work/Code/sftp-utils/README.md"));
+String ftpPath = "path/to/new/file/";
+String ftpFileName = "README.md2";
+
+execute(session, channel -> {
+    SftpUtils.mkdirp(channel, ftpPath);
+    channel.put(transfer, ftpPath + ftpFileName);
+});
+
+String readmeFile = execute(session, channel -> {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    channel.get(ftpPath + ftpFileName, baos);
+    byte[] bytes = baos.toByteArray();
+    return new String(bytes);
+});
+```
+
 ### Usage:
 ```xml
   <dependency>
