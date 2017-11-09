@@ -1,14 +1,21 @@
 # sftp-utils
 
- * mkdirp  
+ ### mkdirp  
 Create directory structure recursively (from mkdir -p command)   
 
 ```java
 SftpUtils.mkdirp(sftpChannel, "/path/to/dir"); //absolute
 SftpUtils.mkdirp(sftpChannel, "another/path/to/dir"); // relative
 ```
+### rmr    
+Removes dirs and files recursivly, starting from a dir name (same as rm -r command)
 
- * execute   
+```java
+SftpUtils.rmr(sftpChannel, "/existence/path/to/remove");  // removes all files and dirs inside the remove directory
+SftpUtils.rmr(sftpChannel, "/existence/path/"); // removes all files and dirs insdie the path directory
+```
+
+ ### execute   
  Execute sftp commands giving a managed ChannelSftp
 
 ```java
