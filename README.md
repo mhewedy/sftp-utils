@@ -11,8 +11,8 @@ SftpUtils.mkdirp(sftpChannel, "another/path/to/dir"); // relative
 Removes dirs and files recursivly, starting from a dir name (same as rm -r command)
 
 ```java
-SftpUtils.rmr(sftpChannel, "/existence/path/to/remove");  // removes all files and dirs inside the remove directory
-SftpUtils.rmr(sftpChannel, "/existence/path/"); // removes all files and dirs insdie the path directory
+SftpUtils.rmr(sftpChannel, "/existence/path/to/remove");  // removes all files and dirs inside the "remove" directory
+SftpUtils.rmr(sftpChannel, "/existence/path/"); // removes all files and dirs insdie the "path" directory
 ```
 
  ### execute   
