@@ -2,6 +2,11 @@ package sftputils;
 
 import com.jcraft.jsch.*;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static com.jcraft.jsch.ChannelSftp.*;
+
 public class SftpUtils {
 
     /**
@@ -66,23 +71,15 @@ public class SftpUtils {
         }
     }
 
-    public interface Action0 {
-        public void execute(ChannelSftp channelSftp) throws SftpException;
-    }
-
-    public interface Action1<T> {
-        public T execute(ChannelSftp channelSftp) throws SftpException;
-    }
-
     private static boolean notExists(ChannelSftp channelSftp, String part) throws SftpException {
         try {
             SftpATTRS attrs = channelSftp.lstat(part);
             if (attrs != null && !attrs.isDir()) {
-                throw new SftpException(ChannelSftp.SSH_FX_FAILURE, "object exists with the same name");
+                throw new SftpException(SSH_FX_FAILURE, "object exists with the same name");
             }
             return false;
         } catch (SftpException ex) {
-            if (ex.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+            if (ex.id == SSH_FX_NO_SUCH_FILE) {
                 return true;
             }
             error("notExists", channelSftp, part);
@@ -118,5 +115,37 @@ public class SftpUtils {
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
         }
+    }
+
+    /**
+     * remove dir recursive (rm -r)
+     * @param channelSftp
+     * @param path
+     * @throws SftpException
+     */
+    public static void rmr(ChannelSftp channelSftp, String path) throws SftpException {
+        if (isBlank(path)) {
+            throw new IllegalArgumentException("path cannot be blank");
+        }
+        List<ChannelSftp.LsEntry> files = channelSftp.ls(path);
+
+        for (ChannelSftp.LsEntry entry : files) {
+            if (entry.getAttrs().isDir()) {
+                if (!Arrays.asList(".", "..").contains(entry.getFilename())) {
+                    rmr(channelSftp, path + "/" + entry.getFilename());
+                }
+            } else {
+                channelSftp.rm(path + "/" + entry.getFilename());
+            }
+        }
+        channelSftp.rmdir(path);
+    }
+
+    public interface Action0 {
+        void execute(ChannelSftp channelSftp) throws SftpException;
+    }
+
+    public interface Action1<T> {
+        T execute(ChannelSftp channelSftp) throws SftpException;
     }
 }
