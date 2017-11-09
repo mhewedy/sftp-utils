@@ -61,6 +61,6 @@ String readmeFile = execute(session, channel -> {
   <dependency>
     <groupId>com.github.mhewedy</groupId>
     <artifactId>sftp-utils</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
   </dependency>
 ```
