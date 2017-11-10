@@ -6,7 +6,7 @@
 
     <groupId>com.github.mhewedy</groupId>
     <artifactId>sftp-utils</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
 
 
     <name>sftp-utils</name>

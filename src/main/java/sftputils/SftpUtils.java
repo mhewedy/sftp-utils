@@ -5,7 +5,7 @@ import com.jcraft.jsch.*;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.jcraft.jsch.ChannelSftp.*;
+import static sftputils.Ops.*;
 
 public class SftpUtils {
 
@@ -71,56 +71,10 @@ public class SftpUtils {
         }
     }
 
-    private static boolean notExists(ChannelSftp channelSftp, String part) throws SftpException {
-        try {
-            SftpATTRS attrs = channelSftp.lstat(part);
-            if (attrs != null && !attrs.isDir()) {
-                throw new SftpException(SSH_FX_FAILURE, "object exists with the same name");
-            }
-            return false;
-        } catch (SftpException ex) {
-            if (ex.id == SSH_FX_NO_SUCH_FILE) {
-                return true;
-            }
-            error("notExists", channelSftp, part);
-            throw ex;
-        }
-    }
-
-    private static void mkdir(ChannelSftp channelSftp, String part) throws SftpException {
-        try {
-            channelSftp.mkdir(part);
-        } catch (SftpException ex) {
-            error("mkdir", channelSftp, part);
-            throw ex;
-        }
-    }
-
-    private static void cd(ChannelSftp channelSftp, String part) throws SftpException {
-        try {
-            channelSftp.cd(part);
-        } catch (SftpException ex) {
-            error("cd", channelSftp, part);
-            throw ex;
-        }
-    }
-
-    private static boolean isBlank(String s) {
-        return s == null || s.trim().isEmpty();
-    }
-
-    private static void error(String ops, ChannelSftp channelSftp, String path) {
-        try {
-            System.err.println("Operation: " + ops + ", pwd:" + channelSftp.pwd() + ", path: " + path);
-        } catch (Exception ex) {
-            System.err.println(ex.getMessage());
-        }
-    }
-
     /**
-     * remove dir recursive (rm -r)
+     * remove dir recursively , similar to shell command rm -r (but works for dirs only)
      * @param channelSftp
-     * @param path
+     * @param path directory to remove and all its sub content
      * @throws SftpException
      */
     public static void rmr(ChannelSftp channelSftp, String path) throws SftpException {
@@ -135,10 +89,10 @@ public class SftpUtils {
                     rmr(channelSftp, path + "/" + entry.getFilename());
                 }
             } else {
-                channelSftp.rm(path + "/" + entry.getFilename());
+                rm(channelSftp, path + "/" + entry.getFilename());
             }
         }
-        channelSftp.rmdir(path);
+        rmdir(channelSftp, path);
     }
 
     public interface Action0 {
