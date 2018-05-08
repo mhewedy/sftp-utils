@@ -1,13 +1,13 @@
 package sftputils;
 
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.SftpATTRS;
-import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.*;
+
+import java.util.Properties;
 
 import static com.jcraft.jsch.ChannelSftp.SSH_FX_FAILURE;
 import static com.jcraft.jsch.ChannelSftp.SSH_FX_NO_SUCH_FILE;
 
-public class Ops {
+class Ops {
     static void mkdir(ChannelSftp channelSftp, String part) throws SftpException {
         try {
             channelSftp.mkdir(part);
@@ -62,6 +62,31 @@ public class Ops {
 
     static boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
+    }
+
+    static Session createSession(Properties properties) {
+        try {
+            String username = properties.getProperty("username");
+            String host = properties.getProperty("host");
+            int port = Integer.parseInt(properties.getProperty("port"));
+            String password = properties.getProperty("password");
+
+            JSch jsch = new JSch();
+            Session session = jsch.getSession(username, host, port);
+            session.setPassword(password);
+            java.util.Properties config = new java.util.Properties();
+            config.put("StrictHostKeyChecking", "no");
+            session.setConfig(config);
+            return session;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    static void closeSession(Session session) {
+        if (session != null) {
+            session.disconnect();
+        }
     }
 
     private static void error(String ops, ChannelSftp channelSftp, String path) {

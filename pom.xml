@@ -6,7 +6,12 @@
 
     <groupId>com.github.mhewedy</groupId>
     <artifactId>sftp-utils</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
+
+    <properties>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
+    </properties>
 
 
     <name>sftp-utils</name>
