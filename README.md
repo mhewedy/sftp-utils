@@ -3,42 +3,60 @@
  ### doInSession   
  Execute sftp commands giving a managed ChannelSftp
  
- Create `SessionFactory` instance:
+ Complete example:
  ```java
+ // Create SessionFactory instance using supplied SimpleSessionFactory class
+ 
 Properties properties = new Properties();
 properties.setProperty("username", "mhewedy");
-properties.setProperty("host", "localhost");
+properties.setProperty("host", "192.168.1.10");
 properties.setProperty("port", "22");
-properties.setProperty("password", "very secure password");
+properties.setProperty("password", "system");
 
 SessionFactory sessionFactory = new SessionFactory.SimpleSessionFactory(properties);
- ```
- 
- Write, Read and Delete file:
- ```java
- 
- private String writeToSftp(byte[] bytes, String fileDir, String ext) {
-     return SftpUtils.doInSession(sessionFactory, channel -> {
-         String filePath = String.format("%s/%s.%s", fileDir, System.currentTimeMillis(), ext);
-         SftpUtils.mkdirp(channel, fileDir);
-         channel.put(new ByteArrayInputStream(bytes), filePath);
-         return filePath;
-     });
- }
 
- private byte[] readFromSftp(String filePath) {
-     return SftpUtils.doInSession(sessionFactory, channel -> {
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         channel.get(filePath, baos);
-         return baos.toByteArray();
-     });
- }
+String fileDir = "test/files/goes/here";
+byte[] bytes = "Test me\n".getBytes("utf8");
 
- private void deleteFromSftp(String filePath) {
-     SftpUtils.doInSession(sessionFactory, channel -> {
-         channel.rm(filePath);
-     });
- }
+// create dir recursive:
+
+SftpUtils.doInSession(sessionFactory, channel -> {
+    SftpUtils.mkdirp(channel, fileDir);
+});
+
+// write a file:
+
+String filePath = SftpUtils.doInSession(sessionFactory, channel -> {
+    String path = String.format("%s/%s.%s", fileDir, System.currentTimeMillis(), "txt");
+    SftpUtils.mkdirp(channel, fileDir);
+    channel.put(new ByteArrayInputStream(bytes), path);
+    return path;
+});
+
+System.out.println("file written at: " + filePath);
+
+// download the file:
+
+String fileContents = SftpUtils.doInSession(sessionFactory, channel -> {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    channel.get(filePath, baos);
+    return new String(baos.toByteArray());
+});
+
+System.out.println("file contents from the server: " + fileContents);
+
+// delete the file:
+
+SftpUtils.doInSession(sessionFactory, channel -> {
+    channel.rm(filePath);
+});
+
+// delete the empty directory:
+
+SftpUtils.doInSession(sessionFactory, channel -> {
+    SftpUtils.rmr(channel, fileDir.split("/")[0]);
+});
+
  ```
 
 Check file is found:
