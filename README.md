@@ -3,49 +3,51 @@
  ### doInSession   
  Execute sftp commands giving a managed ChannelSftp
  
- Set server properties:
+ Create `SessionFactory` instance:
  ```java
-java.util.Properties props = new java.util.Properties(); 
-props.setProperty("username", "ftpuser");
-props.setProperty("host", "ftpserver");
-props.setProperty("port", 22);
-props.setProperty("password", "very secure password");
+Properties properties = new Properties();
+properties.setProperty("username", "mhewedy");
+properties.setProperty("host", "localhost");
+properties.setProperty("port", "22");
+properties.setProperty("password", "very secure password");
+
+SessionFactory sessionFactory = new SessionFactory.SimpleSessionFactory(properties);
  ```
  
  Write, Read and Delete file:
  ```java
-
+ 
  private String writeToSftp(byte[] bytes, String fileDir, String ext) {
- 	return SftpUtils.doInSession(props, channel -> {
- 	    String filePath = String.format("%s/%s.%s", fileDir, System.currentTimeMillis(), ext);
- 		SftpUtils.mkdirp(channel, fileDir);
- 		channel.put(new ByteArrayInputStream(bytes), filePath);
- 		return filePath;
- 	});
+     return SftpUtils.doInSession(sessionFactory, channel -> {
+         String filePath = String.format("%s/%s.%s", fileDir, System.currentTimeMillis(), ext);
+         SftpUtils.mkdirp(channel, fileDir);
+         channel.put(new ByteArrayInputStream(bytes), filePath);
+         return filePath;
+     });
  }
- 
+
  private byte[] readFromSftp(String filePath) {
- 	return SftpUtils.doInSession(props, channel -> {
- 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
- 		channel.get(filePath, baos);
- 		return baos.toByteArray();
- 	});
+     return SftpUtils.doInSession(sessionFactory, channel -> {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         channel.get(filePath, baos);
+         return baos.toByteArray();
+     });
  }
- 
+
  private void deleteFromSftp(String filePath) {
- 	SftpUtils.doInSession(props, channel -> {
- 		channel.rm(filePath);
- 	});
+     SftpUtils.doInSession(sessionFactory, channel -> {
+         channel.rm(filePath);
+     });
  }
  ```
 
 Check file is found:
 ```java
-SftpUtils.doInSession(props, channel -> {
+SftpUtils.doInSession(sessionFactory, channel -> {
     SftpUtils.mkdirp(channel, "path/to/new/file");
 });
 
-boolean findFound = SftpUtils.doInSession(props, channel -> {
+boolean findFound = SftpUtils.doInSession(sessionFactory, channel -> {
     try{
         channel.lstat("non_found_find");
     }catch (SftpException ex){  // only handel exception when needed
@@ -64,12 +66,12 @@ InputStream transfer = Files.newInputStream(Paths.get("/Users/mhewedy/Work/Code/
 String ftpPath = "path/to/new/file/";
 String ftpFileName = "README.md2";
 
-SftpUtils.doInSession(props, channel -> {
+SftpUtils.doInSession(sessionFactory, channel -> {
     SftpUtils.mkdirp(channel, ftpPath);
     channel.put(transfer, ftpPath + ftpFileName);
 });
 
-String readmeFile = SftpUtils.doInSession(props, channel -> {
+String readmeFile = SftpUtils.doInSession(sessionFactory, channel -> {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     channel.get(ftpPath + ftpFileName, baos);
     byte[] bytes = baos.toByteArray();

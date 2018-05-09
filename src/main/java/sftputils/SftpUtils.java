@@ -4,34 +4,24 @@ import com.jcraft.jsch.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
 import static sftputils.Ops.*;
 
 public class SftpUtils {
 
-    /**
-     * @param properties contains the following properties: username, host, port, password
-     */
-    public static <U> U doInSession(Properties properties, Action1<U> action) {
-        final Session session = createSession(properties);
+    public static <U> U doInSession(SessionFactory sessionFactory, Action1<U> action) {
+        final Session session = sessionFactory.createSession();
         try {
             return SftpUtils.execute(session, action);
         } finally {
-            closeSession(session);
+            sessionFactory.closeSession(session);
         }
     }
 
-    /**
-     * @param properties contains the following properties: username, host, port, password
-     */
-    public static void doInSession(Properties properties, final Action0 action) {
-        doInSession(properties, new Action1<Object>() {
-            @Override
-            public Object execute(ChannelSftp channelSftp) throws SftpException {
-                action.execute(channelSftp);
-                return (Void) null;
-            }
+    public static void doInSession(SessionFactory sessionFactory, final Action0 action) {
+        doInSession(sessionFactory, (Action1<Object>) channelSftp -> {
+            action.execute(channelSftp);
+            return (Void) null;
         });
     }
 
@@ -103,9 +93,7 @@ public class SftpUtils {
             sftpChannel = (ChannelSftp) channel;
             return block.execute(sftpChannel);
 
-        } catch (JSchException ex) {
-            throw new RuntimeException(ex);
-        } catch (SftpException ex) {
+        } catch (JSchException | SftpException ex) {
             throw new RuntimeException(ex);
         } finally {
             if (sftpChannel != null) {
