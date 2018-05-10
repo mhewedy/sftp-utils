@@ -5,6 +5,9 @@ import com.jcraft.jsch.Session;
 
 import java.util.Properties;
 
+/**
+ * Thread safe class, better to cache instance of it. (e.g. as a Spring Bean)
+ */
 public interface SessionFactory {
 
     Session createSession();

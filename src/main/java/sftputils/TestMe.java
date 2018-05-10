@@ -20,12 +20,12 @@ public class TestMe {
         byte[] bytes = "Test me\n".getBytes("utf8");
 
         // create dir recursive:
-        SftpUtils.doInSession(sessionFactory, channel -> {
+        SftpUtils.execute(sessionFactory, channel -> {
             SftpUtils.mkdirp(channel, fileDir);
         });
 
         // write a file:
-        String filePath = SftpUtils.doInSession(sessionFactory, channel -> {
+        String filePath = SftpUtils.execute(sessionFactory, channel -> {
             String path = String.format("%s/%s.%s", fileDir, System.currentTimeMillis(), "txt");
             SftpUtils.mkdirp(channel, fileDir);
             channel.put(new ByteArrayInputStream(bytes), path);
@@ -35,7 +35,7 @@ public class TestMe {
         System.out.println("file written at: " + filePath);
 
         // download the file:
-        String fileContents = SftpUtils.doInSession(sessionFactory, channel -> {
+        String fileContents = SftpUtils.execute(sessionFactory, channel -> {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             channel.get(filePath, baos);
             return new String(baos.toByteArray());
@@ -44,13 +44,13 @@ public class TestMe {
         System.out.println("file contents from the server: " + fileContents);
 
         // delete the file:
-        SftpUtils.doInSession(sessionFactory, channel -> {
+        SftpUtils.execute(sessionFactory, channel -> {
             channel.rm(filePath);
         });
 
         // delete the empty directory:
 
-        SftpUtils.doInSession(sessionFactory, channel -> {
+        SftpUtils.execute(sessionFactory, channel -> {
             SftpUtils.rmr(channel, fileDir.split("/")[0]);
         });
     }

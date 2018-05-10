@@ -1,10 +1,11 @@
 # sftp-utils
 
- ### doInSession   
+ ### execute   
  Execute sftp commands giving a managed ChannelSftp
  
  Complete example:
  ```java
+ 
  // Create SessionFactory instance using supplied SimpleSessionFactory class
  
 Properties properties = new Properties();
@@ -13,6 +14,7 @@ properties.setProperty("host", "192.168.1.10");
 properties.setProperty("port", "22");
 properties.setProperty("password", "system");
 
+//Thread safe class, better to cache instance of it. (e.g. as a Spring Bean)
 SessionFactory sessionFactory = new SessionFactory.SimpleSessionFactory(properties);
 
 String fileDir = "test/files/goes/here";
@@ -20,13 +22,13 @@ byte[] bytes = "Test me\n".getBytes("utf8");
 
 // create dir recursive:
 
-SftpUtils.doInSession(sessionFactory, channel -> {
+SftpUtils.execute(sessionFactory, channel -> {
     SftpUtils.mkdirp(channel, fileDir);
 });
 
 // write a file:
 
-String filePath = SftpUtils.doInSession(sessionFactory, channel -> {
+String filePath = SftpUtils.execute(sessionFactory, channel -> {
     String path = String.format("%s/%s.%s", fileDir, System.currentTimeMillis(), "txt");
     SftpUtils.mkdirp(channel, fileDir);
     channel.put(new ByteArrayInputStream(bytes), path);
@@ -37,7 +39,7 @@ System.out.println("file written at: " + filePath);
 
 // download the file:
 
-String fileContents = SftpUtils.doInSession(sessionFactory, channel -> {
+String fileContents = SftpUtils.execute(sessionFactory, channel -> {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     channel.get(filePath, baos);
     return new String(baos.toByteArray());
@@ -47,13 +49,13 @@ System.out.println("file contents from the server: " + fileContents);
 
 // delete the file:
 
-SftpUtils.doInSession(sessionFactory, channel -> {
+SftpUtils.execute(sessionFactory, channel -> {
     channel.rm(filePath);
 });
 
 // delete the empty directory:
 
-SftpUtils.doInSession(sessionFactory, channel -> {
+SftpUtils.execute(sessionFactory, channel -> {
     SftpUtils.rmr(channel, fileDir.split("/")[0]);
 });
 
@@ -61,11 +63,11 @@ SftpUtils.doInSession(sessionFactory, channel -> {
 
 Check file is found:
 ```java
-SftpUtils.doInSession(sessionFactory, channel -> {
+SftpUtils.execute(sessionFactory, channel -> {
     SftpUtils.mkdirp(channel, "path/to/new/file");
 });
 
-boolean findFound = SftpUtils.doInSession(sessionFactory, channel -> {
+boolean findFound = SftpUtils.execute(sessionFactory, channel -> {
     try{
         channel.lstat("non_found_find");
     }catch (SftpException ex){  // only handel exception when needed
@@ -84,12 +86,12 @@ InputStream transfer = Files.newInputStream(Paths.get("/Users/mhewedy/Work/Code/
 String ftpPath = "path/to/new/file/";
 String ftpFileName = "README.md2";
 
-SftpUtils.doInSession(sessionFactory, channel -> {
+SftpUtils.execute(sessionFactory, channel -> {
     SftpUtils.mkdirp(channel, ftpPath);
     channel.put(transfer, ftpPath + ftpFileName);
 });
 
-String readmeFile = SftpUtils.doInSession(sessionFactory, channel -> {
+String readmeFile = SftpUtils.execute(sessionFactory, channel -> {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     channel.get(ftpPath + ftpFileName, baos);
     byte[] bytes = baos.toByteArray();
