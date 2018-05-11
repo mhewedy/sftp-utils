@@ -9,20 +9,33 @@ import static sftputils.Ops.*;
 
 public class SftpUtils {
 
-    public static <U> U doInSession(SessionFactory sessionFactory, Action1<U> action) {
-        final Session session = sessionFactory.createSession();
-        try {
-            return SftpUtils.execute(session, action);
-        } finally {
-            sessionFactory.closeSession(session);
-        }
-    }
-
-    public static void doInSession(SessionFactory sessionFactory, final Action0 action) {
-        doInSession(sessionFactory, (Action1<Object>) channelSftp -> {
-            action.execute(channelSftp);
+    public static void execute(SessionFactory sessionFactory, Action0 block) {
+        execute(sessionFactory, (Action1<Object>) channelSftp -> {
+            block.doInChannel(channelSftp);
             return (Void) null;
         });
+    }
+
+    public static <T> T execute(SessionFactory sessionFactory, Action1<T> block) {
+
+        final Session session = sessionFactory.createSession();
+        ChannelSftp sftpChannel = null;
+
+        try {
+            if (!session.isConnected()) session.connect();
+            Channel channel = session.openChannel("sftp");
+            channel.connect();
+            sftpChannel = (ChannelSftp) channel;
+            return block.doInChannel(sftpChannel);
+
+        } catch (JSchException | SftpException ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            sessionFactory.closeSession(session);
+            if (sftpChannel != null) {
+                sftpChannel.disconnect();
+            }
+        }
     }
 
     /**
@@ -72,33 +85,10 @@ public class SftpUtils {
     }
 
     public interface Action0 {
-        void execute(ChannelSftp channelSftp) throws SftpException;
+        void doInChannel(ChannelSftp channel) throws SftpException;
     }
 
     public interface Action1<T> {
-        T execute(ChannelSftp channelSftp) throws SftpException;
-    }
-
-    // ---- private
-
-    private static <T> T execute(Session session, Action1<T> block) {
-        ChannelSftp sftpChannel = null;
-        try {
-            if (!session.isConnected()) {
-                session.connect();
-            }
-
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            sftpChannel = (ChannelSftp) channel;
-            return block.execute(sftpChannel);
-
-        } catch (JSchException | SftpException ex) {
-            throw new RuntimeException(ex);
-        } finally {
-            if (sftpChannel != null) {
-                sftpChannel.disconnect();
-            }
-        }
+        T doInChannel(ChannelSftp channel) throws SftpException;
     }
 }
